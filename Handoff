@@ -1,0 +1,310 @@
+# MOSHUN AI
+## Codex Project Handoff — AI Video Object Replacement
+
+You are my senior AI/ML engineer, Python development partner, and technical architect.
+
+We are building **Moshun AI**, a self-hosted, general-purpose AI video object replacement system inspired by Higgsfield's Genjutsu.
+
+The objective is to develop our own AI editing model capable of replacing arbitrary objects in existing videos while preserving the original scene, movement, lighting, and temporal consistency.
+
+This is intended to become our own trainable and deployable AI system, not merely a wrapper around a commercial API.
+
+---
+
+## 1. Core Product Vision
+
+**Project name:** Moshun AI  
+**Repository:** `moshun-ai`  
+**Python package:** `moshun_ai`  
+**Primary model:** Wan VACE 14B  
+**Target resolution:** 720p  
+**Cloud infrastructure:** RunPod
+
+### Required capabilities
+
+1. Upload an existing video.
+2. Select any object within the video.
+3. Track the selected object throughout the clip.
+4. Replace that object using either:
+   - A natural-language text prompt.
+   - A reference image of the replacement.
+   - Both simultaneously.
+5. Preserve everything outside the intended edit region.
+6. Maintain realistic object motion, scale, perspective, lighting, shadows, and interactions.
+7. Export the edited video at 720p.
+
+The system must support arbitrary object categories, including vehicles, animals, furniture, electronics, tools, clothing, and other objects.
+
+Do not restrict the architecture to a predefined collection of replacement types.
+
+### Long-term objective
+
+Develop a specialized, fine-tuned video object replacement model that approaches or exceeds the perceived quality of Higgsfield Genjutsu while operating at a lower cost per successful generation.
+
+---
+
+## 2. Model Architecture
+
+### Primary foundation: Wan VACE 14B
+
+We have selected Wan VACE 14B as the initial generative video-editing foundation.
+
+Research and verify its actual capabilities before implementing the inference pipeline.
+
+Relevant resources:
+
+- https://github.com/ali-vilab/VACE
+- https://github.com/Wan-Video/Wan2.1
+- https://huggingface.co/Wan-AI/Wan2.1-VACE-14B
+
+### Supporting technologies
+
+Evaluate:
+
+- **SAM 2:** Video object segmentation and tracking.
+- **PyTorch:** Model execution and eventual training.
+- **Hugging Face Diffusers:** Inference integration where supported.
+- **FFmpeg:** Video extraction, encoding, and processing.
+- **ComfyUI:** Optional inference prototyping.
+- **Gradio:** Initial user interface.
+
+Prioritize native video editing rather than generating independent frames and stitching them together.
+
+### Proposed processing pipeline
+
+Original Video  
+↓  
+Object Selection  
+↓  
+SAM 2 Tracking and Mask Generation  
+↓  
+Text Prompt / Reference Image Conditioning  
+↓  
+Wan VACE 14B Video Editing  
+↓  
+Temporal Consistency Evaluation  
+↓  
+720p Video Export
+
+Treat this as a proposed architecture, not a proven implementation. Verify compatibility and identify any missing components.
+
+---
+
+## 3. Hardware and Compute
+
+### Local development machine
+
+- NVIDIA RTX 4070 Ti
+- 12 GB VRAM
+- 32 GB system RAM
+- Modern high-performance CPU
+- Windows environment
+
+Use the local machine for software development, preprocessing, object tracking, interface development, and lightweight testing.
+
+Do not assume Wan VACE 14B can run locally at 720p without substantial optimization.
+
+### Cloud infrastructure
+
+**Preferred provider: RunPod**
+
+Initial target: A100 80 GB or another GPU with sufficient memory for Wan VACE 14B inference.
+
+Investigate less expensive 48 GB and 32 GB configurations using quantization, CPU offloading, or optimized inference implementations.
+
+Record actual memory requirements instead of relying on theoretical estimates.
+
+Cloud resources must never be provisioned without explicit approval.
+
+---
+
+## 4. Financial Objectives
+
+Moshun AI must be economically competitive with Higgsfield Genjutsu.
+
+Our previously discussed comparison benchmark was approximately $0.681 per second for Higgsfield's 720p Genjutsu API. Verify current pricing before relying on this figure.
+
+### Initial engineering targets
+
+- Five-second 720p videos.
+- Aim for under $1 in GPU compute per successful five-second replacement.
+- Minimize retries and failed generations.
+- Optimize for cost without significantly sacrificing quality.
+
+These are targets, not established capabilities.
+
+Track:
+
+- GPU model and hourly price.
+- Model loading time.
+- Inference duration.
+- Peak VRAM consumption.
+- Video duration and resolution.
+- Cost per attempt.
+- Number of retries.
+- Cost per successful replacement.
+- Visual quality and temporal consistency.
+
+Account separately for storage, idle compute, training, and other overhead.
+
+---
+
+## 5. Development Roadmap
+
+### Phase 1 — Research and Architecture
+
+Before implementing expensive inference:
+
+1. Verify official Wan VACE 14B weights and licensing.
+2. Investigate its Swap Anything workflow.
+3. Confirm text and reference-image conditioning capabilities.
+4. Determine required object masks and input formats.
+5. Research practical single-GPU inference implementations.
+6. Establish estimated GPU requirements.
+7. Select the initial inference framework.
+8. Design the repository structure.
+9. Produce an implementation and benchmarking plan.
+
+**Deliverable:** A technically verified architecture and deployment plan.
+
+### Phase 2 — Baseline Inference
+
+Build a minimal working object replacement system using pretrained Wan VACE 14B.
+
+Start with:
+
+- One 3–5-second source video.
+- One selected object.
+- One replacement prompt.
+- One replacement reference image.
+- A tracked object mask.
+- A generated output video.
+
+Test text-only, reference-only, and combined conditioning where supported.
+
+Do not begin fine-tuning yet.
+
+### Phase 3 — Quality Benchmarking
+
+Evaluate object replacement across multiple categories.
+
+Initial test cases:
+
+1. Stationary vehicle replaced with another vehicle.
+2. Handheld banana replaced with a microphone.
+3. Moving animal replaced with another animal.
+4. Furniture replaced while maintaining occlusion.
+5. Moving vehicle replaced while preserving trajectory.
+
+Evaluate:
+
+- Visual realism.
+- Temporal consistency.
+- Reference-image fidelity.
+- Original-scene preservation.
+- Object geometry.
+- Interaction and motion accuracy.
+- Inference cost.
+
+Keep a reproducible benchmark log and retain representative outputs.
+
+### Phase 4 — Fine-Tuning
+
+After baseline evaluation, investigate LoRA fine-tuning or another suitable parameter-efficient training method.
+
+The goal is to improve arbitrary object replacement, not teach a limited set of predefined swaps.
+
+Potential training inputs:
+
+- Original source videos.
+- Matched edited target videos.
+- Temporal object masks.
+- Replacement text instructions.
+- Replacement reference images.
+
+Investigate synthetic training-data generation using Blender and other tools.
+
+Prioritize diversity across object categories, lighting, movement, camera angles, occlusion, and scene complexity.
+
+Validate that the chosen training implementation actually supports the required conditioning signals.
+
+Use RunPod or Google Colab for training where economically practical.
+
+### Phase 5 — Optimization
+
+Investigate:
+
+- Quantization.
+- CPU and GPU offloading.
+- Memory-efficient attention.
+- Reduced denoising steps.
+- Efficient frame processing.
+- Masked-region optimization.
+- Model compilation and caching where supported.
+
+Optimize cost per successful output, not merely raw inference speed.
+
+### Phase 6 — User Interface
+
+Develop an interface allowing users to:
+
+1. Upload a video.
+2. Select an object directly in the video.
+3. Enter a replacement prompt.
+4. Upload an optional reference image.
+5. Preview the tracked object mask.
+6. Start generation.
+7. Review the output.
+8. Download the edited video.
+
+Begin with Gradio or another lightweight Python-compatible interface.
+
+A more advanced frontend can be developed later.
+
+---
+
+## 6. Engineering Standards
+
+- Python-based modular architecture.
+- Clear project documentation.
+- Reproducible dependencies.
+- Configuration-driven inference settings.
+- Structured logging.
+- GPU memory and performance monitoring.
+- Reusable benchmark scripts.
+- Separate preprocessing, inference, evaluation, and interface modules.
+- Keep model checkpoints out of Git.
+- Never commit credentials, API keys, or RunPod secrets.
+- Avoid unnecessary paid services.
+- Clearly distinguish verified capabilities from assumptions.
+- Prefer established open-source implementations over reinventing foundational components.
+
+### Collaboration expectations
+
+The project owner is learning Python.
+
+Explain important architectural choices and meaningful code changes clearly, without overwhelming them with unnecessary theory.
+
+Implement incrementally, maintain working checkpoints, and avoid making major architectural changes without discussion.
+
+---
+
+## 7. Immediate Codex Assignment
+
+Begin with **Phase 1: Research and Architecture**.
+
+Your first tasks are:
+
+1. Inspect the official Wan VACE repositories and documentation.
+2. Verify the correct 14B checkpoints and editing workflow.
+3. Determine whether the required text and reference-image object replacement workflow is supported directly or needs additional components.
+4. Identify a realistic single-GPU RunPod deployment path.
+5. Recommend the initial Python repository structure.
+6. Create a detailed implementation plan with milestones.
+7. Identify the smallest meaningful inference test.
+
+Create the initial project documentation and scaffolding only after validating the architecture.
+
+**Do not download large checkpoints, rent GPUs, launch training, or begin costly inference without explicit approval.**
+
+The immediate objective is to establish a reliable technical foundation for Moshun AI before committing compute resources.
